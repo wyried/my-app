@@ -294,7 +294,6 @@ function esc(s) {
 }
 function pad(n) { return String(n).padStart(2, "0"); }
 function byPd(pd) { return data.courses.find(c => c.pd === pd); }
-function initials(name) { return name.split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase(); }
 function gradeOf(c, q = data.quarter) { return c.noGrade ? null : c.grades[q]; }
 
 const view = document.getElementById("view");
