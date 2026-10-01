@@ -394,14 +394,14 @@ function coursePage(pd) {
         ${["Q1", "Q2", "Q3", "Q4"].map(q => `<div class="qcell"><div class="ql">${q}</div>${badge(gradeOf(c, q))}</div>`).join("")}
       </div>
       ${c.noGrade ? `<p class="small" style="margin-top:10px">This class doesn't get a grade (NG).</p>` : `
-      <form class="row" style="margin-top:14px" onsubmit="event.preventDefault(); setGrade(${c.pd}, this)">
+      <form class="row" style="margin-top:14px" data-action="setGrade" data-pd="${c.pd}">
         <label class="field">Quarter
           <select name="q">${["Q1", "Q2", "Q3", "Q4"].map(q => `<option ${q === data.quarter ? "selected" : ""}>${q}</option>`).join("")}</select>
         </label>
         <label class="field">Grade %
           <input name="pct" type="number" min="0" max="110" step="0.1" required style="width:90px" value="${g ?? ""}">
         </label>
-        <button class="btn">Update grade</button>
+        <button type="button" class="btn" onclick="submitForm(this.form)">Update grade</button>
       </form>`}
     </section>
 
@@ -429,7 +429,7 @@ function coursePage(pd) {
           <span style="display:flex;gap:8px;align-items:center">${badge(a.earned / a.possible * 100)}
             <button class="btn danger" aria-label="Delete ${esc(a.name)}" onclick="delAssignment(${c.pd}, ${i})">&times;</button></span>
         </li>`).join("")}</ul>` : `<p class="empty">No assignments logged yet.</p>`}
-      <form class="row" style="margin-top:14px" onsubmit="event.preventDefault(); addAssignment(${c.pd}, this)">
+      <form class="row" style="margin-top:14px" data-action="addAssignment" data-pd="${c.pd}">
         <label class="field" style="flex:1 1 140px">Assignment
           <input name="name" required placeholder="e.g. Unit 2 test">
         </label>
@@ -439,7 +439,7 @@ function coursePage(pd) {
         <label class="field">Out of
           <input name="possible" type="number" min="1" step="0.1" required style="width:70px">
         </label>
-        <button class="btn">Add</button>
+        <button type="button" class="btn" onclick="submitForm(this.form)">Add</button>
       </form>
     </section>
   </div>`;
@@ -509,7 +509,7 @@ function newsPage() {
 
     <section class="card" style="margin-top:16px" aria-labelledby="logh">
       <h2 id="logh">Log an attendance event</h2>
-      <form onsubmit="event.preventDefault(); addNews(this)">
+      <form data-action="addNews">
         <div class="row">
           <label class="field">Date <input name="date" type="date" required value="${todayISO()}"></label>
           <label class="field" style="flex:1 1 180px">What happened
@@ -519,7 +519,7 @@ function newsPage() {
             <select name="course">${data.courses.map(c => `<option>${esc(c.name)}</option>`).join("")}</select>
           </label>
         </div>
-        <button class="btn" style="margin-top:12px">Add to News</button>
+        <button type="button" class="btn" style="margin-top:12px" onclick="submitForm(this.form)">Add to News</button>
       </form>
     </section>
   </div>`;
@@ -530,12 +530,12 @@ function settingsPage() {
   return `<div class="page">
     <section class="card">
       <h2>My info</h2>
-      <form onsubmit="event.preventDefault(); saveInfo(this)">
+      <form data-action="saveInfo">
         <div class="row">
           <label class="field" style="flex:1 1 200px">Name <input name="name" value="${esc(data.student.name)}" required></label>
           <label class="field" style="flex:1 1 200px">School <input name="school" value="${esc(data.student.school)}" required></label>
         </div>
-        <button class="btn" style="margin-top:12px">Save</button>
+        <button type="button" class="btn" style="margin-top:12px" onclick="submitForm(this.form)">Save</button>
       </form>
     </section>
     <section class="card">
@@ -578,6 +578,22 @@ function resetAll() {
   try { localStorage.removeItem(KEY); } catch (e) {}
   data = structuredClone(DEFAULT_DATA); location.hash = "#/"; render();
 }
+
+// Forms are handled in JS instead of a real submit, because some previews
+// (like sandboxed frames) block form submission entirely.
+function submitForm(form) {
+  if (!form.reportValidity()) return;
+  const fn = window[form.dataset.action];
+  form.dataset.pd ? fn(parseInt(form.dataset.pd, 10), form) : fn(form);
+}
+document.addEventListener("keydown", e => {
+  const form = e.target.form;
+  if (e.key === "Enter" && form && form.dataset.action && e.target.tagName === "INPUT") {
+    e.preventDefault();
+    submitForm(form);
+  }
+});
+document.addEventListener("submit", e => e.preventDefault());
 
 /* ---------- Router ---------- */
 function renderPage() {
