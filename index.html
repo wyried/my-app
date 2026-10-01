@@ -182,7 +182,7 @@
   .news-item .n-right { text-align: right; }
   .news-item .n-what { font-size: .9rem; }
   .news-item .n-course { font-size: .75rem; text-transform: uppercase; margin-top: 4px; }
-  .news-item .n-mine { display: inline-block; margin-top: 4px; font-size: .72rem; color: var(--blue); border: 1px solid var(--blue); border-radius: 999px; padding: 1px 8px; }
+  .news-item .n-mine { display: inline-block; width: 11px; height: 11px; margin-left: 5px; color: #9aa3ab; vertical-align: middle; }
   .news-item .n-del { background: none; border: 0; color: var(--g-f); font-size: .8rem; text-decoration: underline; padding: 4px 0 0; }
 </style>
 </head>
@@ -519,8 +519,7 @@ function newsPage() {
   return `${profile()}${sectionTabs("news")}<div class="page">
     <ul class="news-list">${items.map(n => `<li class="news-item">
       ${warn}
-      <div><div class="n-title">${esc(n.type)}</div><div class="n-date">${fmtDate(n.date)}</div>
-        ${n.mine ? `<span class="n-mine">Logged by me</span>` : ""}</div>
+      <div><div class="n-title">${esc(n.type)}</div><div class="n-date">${fmtDate(n.date)}${n.mine ? `<svg class="n-mine" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Logged by me"><path d="M3 17.25V21h3.75L17.8 9.95l-3.75-3.75zM20.7 7.05a1 1 0 0 0 0-1.4l-2.35-2.35a1 1 0 0 0-1.4 0l-1.85 1.85 3.75 3.75z"/></svg>` : ""}</div></div>
       <div class="n-right"><div class="n-what">${esc(n.what)}</div><div class="n-course">${esc(n.course)}</div>
         ${n.mine ? `<button class="n-del" onclick="delNews(${n.i})" aria-label="Delete ${esc(n.what)} on ${fmtDate(n.date)}">Delete</button>` : ""}</div>
     </li>`).join("")}</ul>
