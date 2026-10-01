@@ -506,12 +506,9 @@ function todayISO() {
 // After logging an event, the log form hides for 5 minutes
 const LOG_COOLDOWN_MS = 5 * 60 * 1000;
 function logWaitMs() { return (data.lastLogAt || 0) + LOG_COOLDOWN_MS - Date.now(); }
-function fmtWait(ms) { const t = Math.ceil(ms / 1000); return `${Math.floor(t / 60)}:${pad(t % 60)}`; }
+// Bring the form back once the wait is over, if the News page is open
 setInterval(() => {
-  const el = document.getElementById("logWait");
-  if (!el) return;
-  const ms = logWaitMs();
-  if (ms > 0) el.textContent = fmtWait(ms); else render();
+  if (location.hash === "#/news" && logWaitMs() <= 0 && !document.querySelector('form[data-action="addNews"]')) render();
 }, 1000);
 
 function newsPage() {
@@ -528,7 +525,7 @@ function newsPage() {
         ${n.mine ? `<button class="n-del" onclick="delNews(${n.i})" aria-label="Delete ${esc(n.what)} on ${fmtDate(n.date)}">Delete</button>` : ""}</div>
     </li>`).join("")}</ul>
 
-    ${logWaitMs() > 0 ? `<p class="small" style="margin-top:16px" role="status">You can log another event in <span id="logWait">${fmtWait(logWaitMs())}</span>.</p>` : `
+    ${logWaitMs() > 0 ? "" : `
     <section class="card" style="margin-top:16px" aria-labelledby="logh">
       <h2 id="logh">Log an attendance event</h2>
       <form data-action="addNews">
