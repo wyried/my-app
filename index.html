@@ -196,7 +196,9 @@
     <span></span>
   </header>
 
-  <main id="view" tabindex="-1"></main>
+  <main id="view" tabindex="-1">
+    <noscript><div class="page"><div class="alert">This viewer isn't running JavaScript, so the app can't load here. Open it in Safari or Chrome instead.</div></div></noscript>
+  </main>
 
   <nav class="bottomnav" aria-label="Main">
     <a href="#/" data-nav="home" aria-label="Home">
@@ -226,6 +228,14 @@
   <a href="#/settings">Settings &amp; reset</a>
 </nav>
 
+<script>
+// If anything breaks while loading, show the error instead of a blank screen
+window.onerror = function (msg, src, line) {
+  var v = document.getElementById("view");
+  if (v) v.innerHTML = '<div class="page"><div class="alert"><strong>Something went wrong loading the app.</strong><br>' +
+    String(msg).replace(/</g, "&lt;") + " (line " + line + ")</div></div>";
+};
+</script>
 <script>
 /* ---------- Data (from your portal screenshots) ---------- */
 const DEFAULT_DATA = {
@@ -264,7 +274,7 @@ function load() {
     const saved = localStorage.getItem(KEY);
     if (saved) return JSON.parse(saved);
   } catch (e) {}
-  return structuredClone(DEFAULT_DATA);
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
@@ -568,7 +578,8 @@ function addAssignment(pd, form) {
 }
 function delAssignment(pd, i) { byPd(pd).assignments.splice(i, 1); save(); render(); }
 function addNews(form) {
-  (data.myNews ||= []).push({ type: "Attendance", date: form.date.value, what: form.what.value, course: form.course.value });
+  if (!data.myNews) data.myNews = [];
+  data.myNews.push({ type: "Attendance", date: form.date.value, what: form.what.value, course: form.course.value });
   save(); render();
 }
 function delNews(i) { data.myNews.splice(i, 1); save(); render(); }
@@ -576,7 +587,7 @@ function saveInfo(form) { data.student.name = form.name.value.trim(); data.stude
 function resetAll() {
   if (!confirm("Reset everything back to the original grades?")) return;
   try { localStorage.removeItem(KEY); } catch (e) {}
-  data = structuredClone(DEFAULT_DATA); location.hash = "#/"; render();
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA)); location.hash = "#/"; render();
 }
 
 // Forms are handled in JS instead of a real submit, because some previews
