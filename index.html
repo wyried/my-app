@@ -503,6 +503,17 @@ function todayISO() {
   return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
 }
 
+// After logging an event, the log form hides for 5 minutes
+const LOG_COOLDOWN_MS = 5 * 60 * 1000;
+function logWaitMs() { return (data.lastLogAt || 0) + LOG_COOLDOWN_MS - Date.now(); }
+function fmtWait(ms) { const t = Math.ceil(ms / 1000); return `${Math.floor(t / 60)}:${pad(t % 60)}`; }
+setInterval(() => {
+  const el = document.getElementById("logWait");
+  if (!el) return;
+  const ms = logWaitMs();
+  if (ms > 0) el.textContent = fmtWait(ms); else render();
+}, 1000);
+
 function newsPage() {
   title.textContent = "News";
   const mine = (data.myNews || []).map((n, i) => ({ ...n, mine: true, i }));
@@ -517,6 +528,7 @@ function newsPage() {
         ${n.mine ? `<button class="n-del" onclick="delNews(${n.i})" aria-label="Delete ${esc(n.what)} on ${fmtDate(n.date)}">Delete</button>` : ""}</div>
     </li>`).join("")}</ul>
 
+    ${logWaitMs() > 0 ? `<p class="small" style="margin-top:16px" role="status">You can log another event in <span id="logWait">${fmtWait(logWaitMs())}</span>.</p>` : `
     <section class="card" style="margin-top:16px" aria-labelledby="logh">
       <h2 id="logh">Log an attendance event</h2>
       <form data-action="addNews">
@@ -531,7 +543,7 @@ function newsPage() {
         </div>
         <button type="button" class="btn" style="margin-top:12px" onclick="submitForm(this.form)">Add to News</button>
       </form>
-    </section>
+    </section>`}
   </div>`;
 }
 
@@ -580,6 +592,7 @@ function delAssignment(pd, i) { byPd(pd).assignments.splice(i, 1); save(); rende
 function addNews(form) {
   if (!data.myNews) data.myNews = [];
   data.myNews.push({ type: "Attendance", date: form.date.value, what: form.what.value, course: form.course.value });
+  data.lastLogAt = Date.now();
   save(); render();
 }
 function delNews(i) { data.myNews.splice(i, 1); save(); render(); }
