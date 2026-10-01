@@ -182,6 +182,8 @@
   .news-item .n-right { text-align: right; }
   .news-item .n-what { font-size: .9rem; }
   .news-item .n-course { font-size: .75rem; text-transform: uppercase; margin-top: 4px; }
+  .news-item .n-mine { display: inline-block; margin-top: 4px; font-size: .72rem; color: var(--blue); border: 1px solid var(--blue); border-radius: 999px; padding: 1px 8px; }
+  .news-item .n-del { background: none; border: 0; color: var(--g-f); font-size: .8rem; text-decoration: underline; padding: 4px 0 0; }
 </style>
 </head>
 <body>
@@ -246,8 +248,9 @@ const DEFAULT_DATA = {
 };
 
 const NEWS = [
-  { type: "Attendance", date: "September 17, 2026", what: "Early Sign-Out Excused", course: "Math Data&Fin Lit H" }
+  { type: "Attendance", date: "2026-09-17", what: "Early Sign-Out Excused", course: "Math Data&Fin Lit H" }
 ];
+const EVENT_TYPES = ["Early Sign-Out Excused", "Early Sign-Out Unexcused", "Absence Excused", "Absence Unexcused", "Tardy"];
 
 const KEY = "my-grades-v1";
 let data = load();
@@ -480,15 +483,44 @@ function placeholderPage(key, name) {
   </div>`;
 }
 
+function fmtDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+function todayISO() {
+  const t = new Date();
+  return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+}
+
 function newsPage() {
   title.textContent = "News";
+  const mine = (data.myNews || []).map((n, i) => ({ ...n, mine: true, i }));
+  const items = [...NEWS, ...mine].sort((a, b) => b.date.localeCompare(a.date));
   const warn = `<svg viewBox="0 0 52 46" aria-hidden="true"><path d="M22.5 3a4 4 0 0 1 7 0l21 37a4 4 0 0 1-3.5 6H5a4 4 0 0 1-3.5-6z" fill="#de8443"/><rect x="23" y="12" width="6" height="19" rx="3" fill="#fff"/><circle cx="26" cy="37" r="3.3" fill="#fff"/></svg>`;
   return `${profile()}${sectionTabs("news")}<div class="page">
-    <ul class="news-list">${NEWS.map(n => `<li class="news-item">
+    <ul class="news-list">${items.map(n => `<li class="news-item">
       ${warn}
-      <div><div class="n-title">${esc(n.type)}</div><div class="n-date">${esc(n.date)}</div></div>
-      <div class="n-right"><div class="n-what">${esc(n.what)}</div><div class="n-course">${esc(n.course)}</div></div>
+      <div><div class="n-title">${esc(n.type)}</div><div class="n-date">${fmtDate(n.date)}</div>
+        ${n.mine ? `<span class="n-mine">Logged by me</span>` : ""}</div>
+      <div class="n-right"><div class="n-what">${esc(n.what)}</div><div class="n-course">${esc(n.course)}</div>
+        ${n.mine ? `<button class="n-del" onclick="delNews(${n.i})" aria-label="Delete ${esc(n.what)} on ${fmtDate(n.date)}">Delete</button>` : ""}</div>
     </li>`).join("")}</ul>
+
+    <section class="card" style="margin-top:16px" aria-labelledby="logh">
+      <h2 id="logh">Log an attendance event</h2>
+      <form onsubmit="event.preventDefault(); addNews(this)">
+        <div class="row">
+          <label class="field">Date <input name="date" type="date" required value="${todayISO()}"></label>
+          <label class="field" style="flex:1 1 180px">What happened
+            <select name="what">${EVENT_TYPES.map(t => `<option>${t}</option>`).join("")}</select>
+          </label>
+          <label class="field" style="flex:1 1 180px">Class
+            <select name="course">${data.courses.map(c => `<option>${esc(c.name)}</option>`).join("")}</select>
+          </label>
+        </div>
+        <button class="btn" style="margin-top:12px">Add to News</button>
+      </form>
+    </section>
   </div>`;
 }
 
@@ -534,6 +566,11 @@ function addAssignment(pd, form) {
   save(); render();
 }
 function delAssignment(pd, i) { byPd(pd).assignments.splice(i, 1); save(); render(); }
+function addNews(form) {
+  (data.myNews ||= []).push({ type: "Attendance", date: form.date.value, what: form.what.value, course: form.course.value });
+  save(); render();
+}
+function delNews(i) { data.myNews.splice(i, 1); save(); render(); }
 function saveInfo(form) { data.student.name = form.name.value.trim(); data.student.school = form.school.value.trim(); save(); location.hash = "#/"; }
 function resetAll() {
   if (!confirm("Reset everything back to the original grades?")) return;
