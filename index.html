@@ -76,7 +76,8 @@
   .session.alt { background: var(--row-alt); }
   .session .lbl { font-style: italic; font-weight: 700; font-size: 1.05rem; }
   .session .what { color: var(--navy); font-size: .92rem; line-height: 1.4; }
-  .pill-p { background: var(--present); color: #fff; font-weight: 700; border-radius: 4px; padding: 4px 9px; }
+  .session-link { grid-column: 1 / 3; display: grid; grid-template-columns: 82px 1fr; gap: 10px; align-items: center; background: none; border: 0; padding: 0; text-align: left; color: inherit; }
+  .pill-p { background: var(--present); color: #fff; font-weight: 700; border: 0; border-radius: 4px; padding: 4px 9px; min-width: 32px; min-height: 32px; }
   .time { font-weight: 700; color: var(--navy); }
 
   /* Quarters */
@@ -237,6 +238,7 @@ const DEFAULT_DATA = {
 const KEY = "my-grades-v1";
 let data = load();
 let dayFilter = "all";
+let showSOE = false;
 
 function load() {
   try {
@@ -305,11 +307,13 @@ function homePage() {
     <div class="school-head">${esc(data.student.school)}</div>
     <div class="school-sub"><button class="info-btn" onclick="location.hash='#/settings'">My Info</button></div>
   </section>
-  ${cur ? `<button class="session" onclick="location.hash='#/course/${cur.pd}'" aria-label="In session: ${esc(cur.name)}, room ${cur.room}. Marked present.">
-      <span class="lbl">In Session</span>
-      <span class="what">Room ${cur.room} - ${pad(cur.pd)} - ${cur.rot} - ${esc(cur.name)} - ${esc(cur.teacher)}</span>
-      <span class="pill-p" aria-hidden="true">P</span>
-    </button>` : ""}
+  ${cur ? `<div class="session">
+      <button class="session-link" onclick="location.hash='#/course/${cur.pd}'" aria-label="In session: ${esc(cur.name)}, room ${cur.room}">
+        <span class="lbl">In Session</span>
+        <span class="what">Room ${cur.room} - ${pad(cur.pd)} - ${cur.rot} - ${esc(cur.name)} - ${esc(cur.teacher)}</span>
+      </button>
+      <button class="pill-p" onclick="togglePill()" aria-label="${showSOE ? "SOE" : "Present"}. Tap to switch.">${showSOE ? "SOE" : "P"}</button>
+    </div>` : ""}
   ${nxt ? `<button class="session alt" onclick="location.hash='#/course/${nxt.pd}'" aria-label="Next: ${esc(nxt.name)} at ${data.next.time}">
       <span class="lbl">Next</span>
       <span class="what">Room ${nxt.room} - ${pad(nxt.pd)} - ${nxt.rot} - ${esc(nxt.name)} - ${esc(nxt.teacher)}</span>
@@ -491,6 +495,7 @@ function notFound() {
 /* ---------- Actions ---------- */
 function setQuarter(q) { data.quarter = q; save(); render(); }
 function toggleDay() { data.today = data.today === "A" ? "B" : "A"; save(); render(); }
+function togglePill() { showSOE = !showSOE; render(); }
 function setFilter(f) { dayFilter = f; render(); }
 function setGrade(pd, form) {
   const c = byPd(pd), v = parseFloat(form.pct.value);
