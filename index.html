@@ -172,6 +172,16 @@
   .bar > span { display: block; height: 100%; }
   .linkrow { width: 100%; background: none; border: 0; text-align: left; color: inherit; padding: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .small { font-size: .85rem; color: var(--muted); }
+
+  /* News */
+  .news-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .news-item { display: grid; grid-template-columns: 40px auto 1fr; gap: 12px; align-items: center; background: #fff; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.15); color: #1d2b44; }
+  .news-item svg { width: 40px; height: 36px; }
+  .news-item .n-title { font-size: 1.05rem; font-weight: 700; }
+  .news-item .n-date { font-size: .9rem; white-space: nowrap; }
+  .news-item .n-right { text-align: right; }
+  .news-item .n-what { font-size: .9rem; }
+  .news-item .n-course { font-size: .75rem; text-transform: uppercase; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -234,6 +244,10 @@ const DEFAULT_DATA = {
     { pd: 8, rot: "B", name: "Math Data&Fin Lit H",  teacher: "Sandmire, J",          room: "08-813", grades: { Q1: 84 }, ex: 2, unx: 5, tardy: 0, assignments: [] }
   ]
 };
+
+const NEWS = [
+  { type: "Attendance", date: "September 17, 2026", what: "Early Sign-Out Excused", course: "Math Data&Fin Lit H" }
+];
 
 const KEY = "my-grades-v1";
 let data = load();
@@ -466,6 +480,18 @@ function placeholderPage(key, name) {
   </div>`;
 }
 
+function newsPage() {
+  title.textContent = "News";
+  const warn = `<svg viewBox="0 0 52 46" aria-hidden="true"><path d="M22.5 3a4 4 0 0 1 7 0l21 37a4 4 0 0 1-3.5 6H5a4 4 0 0 1-3.5-6z" fill="#de8443"/><rect x="23" y="12" width="6" height="19" rx="3" fill="#fff"/><circle cx="26" cy="37" r="3.3" fill="#fff"/></svg>`;
+  return `${profile()}${sectionTabs("news")}<div class="page">
+    <ul class="news-list">${NEWS.map(n => `<li class="news-item">
+      ${warn}
+      <div><div class="n-title">${esc(n.type)}</div><div class="n-date">${esc(n.date)}</div></div>
+      <div class="n-right"><div class="n-what">${esc(n.what)}</div><div class="n-course">${esc(n.course)}</div></div>
+    </li>`).join("")}</ul>
+  </div>`;
+}
+
 function settingsPage() {
   title.textContent = "My Info";
   return `<div class="page">
@@ -525,7 +551,7 @@ function renderPage() {
     case "course":     html = coursePage(parseInt(parts[1], 10)); break;
     case "attendance": html = attendancePage(); break;
     case "planner":    html = placeholderPage("planner", "Planner"); break;
-    case "news":       html = placeholderPage("news", "News"); nav = "news"; break;
+    case "news":       html = newsPage(); nav = "news"; break;
     case "links":      html = placeholderPage("", "Links"); nav = "links"; break;
     case "reports":    html = placeholderPage("reports", "Reports"); nav = "reports"; break;
     case "tests":      html = placeholderPage("tests", "Test History"); break;
